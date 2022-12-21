@@ -1,6 +1,7 @@
-const cart_items = document.querySelector("#cart .cart-items");
+// const cart_items = document.querySelector("#cart .cart-items");
 
-const parentContainer = document.getElementById("EcommerceContainer");
+
+// const parentContainer = document.getElementById("EcommerceContainer");
 // parentContainer.addEventListener("click", (e) => {
 //   if (e.target.className == "shop-item-button") {
 //     const id = e.target.parentNode.parentNode.id;
@@ -83,6 +84,12 @@ const parentContainer = document.getElementById("EcommerceContainer");
 //   }
 // });
 
+const parentContainer = document.getElementById("EcommerceContainer")
+
+// const cartContainerBtn = document.getElementsByClassName('cart-holder')[0]
+
+// cartContainerBtn.addEventListener('click',showCartContainer)
+
 window.addEventListener('DOMContentLoaded',()=>{
   axios.get('http://localhost:3000/products')
   .then((data)=>{
@@ -131,9 +138,12 @@ window.addEventListener('DOMContentLoaded',()=>{
           if(res.status === 200){
             notifyUsers(`${name} ${res.data.message}`)
           }
+          else {
+            throw new Error(res.data.message)
+          }
         })
-        .catch((err)=>{
-          console.log(err)
+        .catch((errMsg)=>{
+          notifyUsers(errMsg)
         })
       })
       prodDetailsDiv.appendChild(button);
@@ -165,3 +175,87 @@ function notifyUsers(message){
       notification.remove();
     }, 2500);
   }
+
+
+function showCartContainer(e){
+  console.log('button cliked at cart container')
+  axios.get('http://localhost:3000/cart')
+  .then((res)=>{
+    console.log(res.data.products)
+    cartData = res.data.products
+    const parentSection = document.getElementById('cart-items')
+    cartData.forEach(item => {
+      let name = item.title
+      let quantity = item.cartItem.quantity
+      let price = item.price
+      let img = item.imageUrl
+      console.log(name,quantity,price,img)
+      console.log(typeof(quantity),typeof(price)) 
+        // Create a new div element
+        const cartRow = document.createElement('div');
+        cartRow.className = 'cart-row';
+  
+        // Create an img element
+        const imgElement = document.createElement('img');
+        imgElement.className = 'cart-img';
+        imgElement.src = img;
+        imgElement.alt = '';
+      
+        // Create a span element for the item name
+        const span = document.createElement('span');
+        span.textContent = name;
+      
+        // Create a span element for the item price
+        const priceElement = document.createElement('span');
+        priceElement.className = 'cart-price cart-column';
+        priceElement.textContent = `$${price}`;
+      
+        // Create an input element for the item quantity
+        const input = document.createElement('input');
+        input.type = 'text'
+        input.value = quantity
+      
+        // Create a button element to remove the item
+        const button = document.createElement('button');
+        button.textContent = 'REMOVE';
+      
+        // Append the img, span, input, and button elements to the cartRow div
+        cartRow.appendChild(imgElement);
+        cartRow.appendChild(span);
+        cartRow.appendChild(priceElement);
+        cartRow.appendChild(input);
+        cartRow.appendChild(button);
+      
+        // Append the cartRow div to the DOM
+  
+        parentSection.appendChild(cartRow)
+    })
+
+    // cart total
+    
+  })
+}
+
+parentContainer.addEventListener("click", (e) => {
+  if (
+        e.target.className == "cart-btn-bottom" ||
+        e.target.className == "cart-bottom" ||
+        e.target.className == "cart-holder"
+      ) {
+        document.querySelector("#cart").style = "display:block;"
+        showCartContainer()
+      }
+      if (e.target.className == "cancel") {
+        document.querySelector("#cart").style = "display:none;";
+      }
+      if (e.target.className == "purchase-btn") {
+        if (parseInt(document.querySelector(".cart-number").innerText) === 0) {
+          alert("You have Nothing in Cart , Add some products to purchase !");
+          return;
+        }
+        alert("Thanks for the purchase");
+        cart_items.innerHTML = "";
+        document.querySelector(".cart-number").innerText = 0;
+        document.querySelector("#total-value").innerText = `0`;
+      }
+})

@@ -60,13 +60,14 @@ exports.getCart = (req, res, next) => {
       return cart
         .getProducts()
         .then(products => {
-          res.render('shop/cart', {
-            path: '/cart',
-            pageTitle: 'Your Cart',
-            products: products
-          });
+          res.json({products,message:true})
+          // res.render('shop/cart', {
+          //   path: '/cart',
+          //   pageTitle: 'Your Cart',
+          //   products: products
+          // });
         })
-        .catch(err => console.log(err));
+        .catch((err) =>res.status(500).json({success:false,message:'unable to fetch products'}));
     })
     .catch(err => console.log(err));
 };
