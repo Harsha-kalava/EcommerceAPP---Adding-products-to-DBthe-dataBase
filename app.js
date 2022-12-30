@@ -21,7 +21,8 @@ app.set('views', 'views');
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 
-app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({force:true}));
+app.use(bodyParser.json())
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
@@ -47,7 +48,7 @@ Product.belongsToMany(Cart, { through: CartItem });
 
 sequelize
   // .sync({ force: true })
-  .sync({alter:true})
+  .sync()
   .then(result => {
     return User.findByPk(1);
     // console.log(result);

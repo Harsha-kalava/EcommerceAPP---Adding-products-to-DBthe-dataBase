@@ -1,11 +1,31 @@
 const Product = require('../models/product');
 const Cart = require('../models/cart');
-const { markAsUntransferable } = require('worker_threads');
-
+const CartItem = require('../models/cart-item')
+// let offset
+const itemsPerPage = 2
 exports.getProducts = (req, res, next) => {
-  Product.findAll()
-    .then(products => {
-      res.json({products,success:true})
+  const page = req.query.page || 1
+  console.log(page,'hello')
+  let totalItems
+  Product.count()
+  .then((total)=>{
+    totalItems = total
+    console.log(totalItems,'count function-->total items')
+    return Product.findAll({
+      offset:(page-1)*itemsPerPage,
+      limit:itemsPerPage
+    })
+  }).then(products => {
+      res.json({
+        products:products,
+        currentPage:page,
+        hasNextPage:itemsPerPage*page<totalItems,
+        nextPage:Number(page)+1,
+        hasPreviousPage:page>1,
+        previousPage:page-1,
+        lastPage:Math.ceil(totalItems/itemsPerPage),
+        firstPage:Math.ceil(totalItems/totalItems)
+      }) 
       // res.render('shop/product-list', {
       //   prods: products,
       //   pageTitle: 'All Products',
@@ -40,6 +60,7 @@ exports.getProduct = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
+  const page = req.query.page
   Product.findAll()
     .then(products => {
       res.render('shop/index', {
@@ -53,23 +74,51 @@ exports.getIndex = (req, res, next) => {
     });
 };
 
-exports.getCart = (req, res, next) => {
+exports.getCart = (req, res, next) => {  
+  const page = req.query.page || 1
+  console.log(page,'cart hello')
   req.user
-    .getCart()
-    .then(cart => {
-      return cart
-        .getProducts()
-        .then(products => {
-          res.json({products,message:true})
-          // res.render('shop/cart', {
-          //   path: '/cart',
-          //   pageTitle: 'Your Cart',
-          //   products: products
-          // });
+  .getCart()
+  .then(cart => {
+    return cart
+      .getProducts()
+      .then(products=>{
+        productDetails = products
+        return CartItem.count()
+      })
+      .then(res=>{
+        totalItems=res
+      })
+      .then(items=>{
+        return CartItem.findAll({
+          offset:(page-1)*itemsPerPage,
+          limit:itemsPerPage
         })
-        .catch((err) =>res.status(500).json({success:false,message:'unable to fetch products'}));
-    })
-    .catch(err => console.log(err));
+      })
+      .then(items => {
+        // console.log(products)
+        res.status(200).json({
+        productDetails:productDetails,
+        items:items,
+        currentPage:page,
+        hasNextPage:itemsPerPage*page<totalItems,
+        nextPage:Number(page)+1,
+        hasPreviousPage:page>1,
+        previousPage:page-1,
+        lastPage:Math.ceil(totalItems/itemsPerPage),
+        firstPage:Math.ceil(totalItems/totalItems),
+        success:true})
+        // res.render('shop/cart', {
+        //   path: '/cart',
+        //   pageTitle: 'Your Cart',
+        //   products: products
+        // });
+      })
+      .catch(err =>  res.status(500).json({success:false , message:err}));
+  })
+  .catch(err=>{
+    res.status(500).json({success:false , message:err})
+  });
 };
 
 exports.postCart = (req, res, next) => {
@@ -107,20 +156,24 @@ exports.postCart = (req, res, next) => {
 };
 
 exports.postCartDeleteProduct = (req, res, next) => {
-  const prodId = req.body.productId;
+  const prodId = req.params.id;
+  // console.log("prodId-----------",prodId)
   req.user
     .getCart()
     .then(cart => {
       return cart.getProducts({ where: { id: prodId } });
     })
-    .then(products => {
-      const product = products[0];
-      return product.cartItem.destroy();
+    .then(async(products) => {
+      let cart = await req.user.getCart()
+      const product =  products[0];
+      return CartItem.destroy({where:{productId:product.id,cartId:cart.id}});
     })
     .then(result => {
-      res.redirect('/cart');
+      res.status(200).json({data:result,success:true})
     })
-    .catch(err => console.log(err));
+    .catch((err)=>{
+      res.status(500).json({success:false , message: 'Error Occured'});
+    });
 };
 
 exports.getOrders = (req, res, next) => {

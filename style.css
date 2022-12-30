@@ -266,6 +266,17 @@ section h2{
 .purchase-btn:hover{
     background-color:#18acdd;
 }
+
+#pagination{
+    display:flex;
+    justify-content: center;
+    /* padding:2.5rem; */
+}
+
+.pageButton{
+    padding: 0 1rem;
+}
+
 footer{
     display:flex;
     margin-top:40px;
