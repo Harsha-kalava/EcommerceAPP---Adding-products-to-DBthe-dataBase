@@ -157,23 +157,16 @@ exports.postCart = (req, res, next) => {
 
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.params.id;
-  // console.log("prodId-----------",prodId)
-  req.user
-    .getCart()
-    .then(cart => {
-      return cart.getProducts({ where: { id: prodId } });
-    })
-    .then(async(products) => {
-      let cart = await req.user.getCart()
-      const product =  products[0];
-      return CartItem.destroy({where:{productId:product.id,cartId:cart.id}});
+  CartItem.findOne({where:{
+    productId : prodId
+  }})
+    .then(res => {
+      return res.destroy();
     })
     .then(result => {
-      res.status(200).json({data:result,success:true})
+      console.log('DESTROYED PRODUCT');
     })
-    .catch((err)=>{
-      res.status(500).json({success:false , message: 'Error Occured'});
-    });
+    .catch(err => console.log(err));
 };
 
 exports.getOrders = (req, res, next) => {

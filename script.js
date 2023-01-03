@@ -147,7 +147,6 @@ function notifyUsers(message){
     }, 2500);
   }
 
-
 function showCartContainer(data){
   let totalValue = 0
   // console.log(data.items,data.productDetails,'cartContainer')
@@ -211,10 +210,16 @@ function showCartContainer(data){
       cartQuantityButton.className = 'btn btn-danger'
       cartQuantityButton.textContent = "REMOVE";
       cartQuantityButton.addEventListener('click',(e)=>{
-        // console.log(id,'removeItem function called')
-        axios.delete(`http://localhost:3000/cart-delete-item/${id}`)
-        .then(response=>{
+        e.target.parentNode.parentNode.remove()
+        console.log(id,'removeItem function called')
+        axios.post(`http://localhost:3000/cartdelete/${id}`)
+        .then(res=>{
+          console.log('delete here')
+          console.log(res,'delete button response')
           showCartContainer()
+          })
+          .catch((err)=>{
+            console.log(err,'unable to delete the product from cart')
           })
       })
       cartQuantity.appendChild(cartQuantityButton);
